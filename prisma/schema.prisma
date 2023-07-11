@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../node_modules/.prisma/client"
+  // previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+
+model User {
+  id               String     @id @default(cuid())
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  email            String     @unique
+  refreshTokenHash String?
+  password         String
+  firstName        String?
+  lastName         String?
+  ownedJobs        Job[]
+  jobs             JobsUser[]
+  role             Role
+}
+
+model Job {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  published   Boolean
+  title       String
+  description String?
+  users       JobsUser[]
+  owner       User?      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String?
+}
+
+model JobsUser {
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId      String
+  assignedAt DateTime @default(now())
+
+  @@id([userId, jobId])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
